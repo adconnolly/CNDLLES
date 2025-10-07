@@ -5,8 +5,9 @@ def topHatFilter(u_nopad,zwindow,ywindow,xwindow,nz,ny,nx,dz_nopad,dy_nopad,dx_n
   nxLES=int(len(dx_nopad)/nx)
   nyLES=int(len(dy_nopad)/ny)
   nzLES=int(len(dz_nopad)/nz)
-  u=np.pad(u_nopad,((0,zwindow-nz),(ywindow//2-ny//2,ywindow//2-ny//2),(xwindow//2-nx//2,xwindow//2-nx//2)),mode='wrap')
-  u[u.shape[0]-(zwindow-nz):,:,:]=0
+  u_padtop=np.pad(u_nopad,((0,zwindow-nz),(0,0),(0,0)),mode='edge') # Pads with du/dz|top = 0
+  u=np.pad(u_padtop,((0,0),(ywindow//2-ny//2,ywindow//2-ny//2),
+                    (xwindow//2-nx//2,xwindow//2-nx//2)),mode='wrap') # Pads with periodic BCs
 
   ubar=np.zeros([nzLES,nyLES,nxLES])
   dy=np.pad(dy_nopad,(ywindow//2-ny//2,ywindow//2-ny//2),mode='wrap')

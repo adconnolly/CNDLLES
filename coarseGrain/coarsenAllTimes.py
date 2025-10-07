@@ -8,11 +8,12 @@ path='/glade/u/home/adac/work/DNSdata/DNS_SBL_L320/'
 Repath='Re2700'
 path=path+Repath+'/'
 
-rcoarse=60#40 # 40 DNS grid avg window 
-rzcoarse=156
-rgrid=15
-rzgrid=39
+rcoarse=60 # DNS grid avg window 
+rzcoarse=156 # ^ in the vertical
+rgrid=15 # DNS spacing per LES spacing
+rzgrid=39 # ^ in the vertical
 
+# Timesteps are strings in file names
 if Repath=='Re900':
   timesteps1=np.arange(590200,596000,200)
   timesteps2=np.arange(596000,610000+1,1000)
@@ -22,8 +23,8 @@ elif Repath=='Re1800':
 elif Repath=='Re2700':
   timesteps=np.arange(1368000,1386000+1,9000)
 
+# Loop through time
 nt=len(timesteps)
-
 for i in range(nt):
   if i==0:
     x, y, z, ubar, vbar, wbar, t11, t22, t33, t12, t13, t23, bbar, ubbar, vbbar, wbbar, pbar =coarsen(path,timesteps[i],rcoarse,rzcoarse,rgrid,rzgrid)
@@ -167,5 +168,9 @@ ds = xr.Dataset(
     ),
 )
 
+# Save name string conventions is 
+# coarse[LES filter to LES grid ratio]
+# x[Horizontal DNS grid to LES grid ratio][Vertical DNS grid to LES grid ratio]
+# _Re[Reynolds #]
 ds.to_netcdf("coarse"+str(int(rcoarse/rgrid))+"x"+str(rgrid)+str(rzgrid)+"_"+Repath+".nc")
 print(ds)
