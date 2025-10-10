@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cndlles"
+version = "0.0.1"
+description = "C(N)-equivariant Deep Learning for LES"
+readme = "README.md"
+requires-python = ">=3.7"
+authors = [{ name = "Alex Connolly", email = "ac5006@columbia.edu" }]
+urls = { Homepage = "https://github.com/adconnolly/CNDLLES" }
+dependencies = [
+  "escnn"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
