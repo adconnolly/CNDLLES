@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
+from torch import from_numpy
 
 
 def plot_losses(losses, labels=["Train"], cutStartPct=0.25, zoomEndEpochs=10):
@@ -8,7 +8,7 @@ def plot_losses(losses, labels=["Train"], cutStartPct=0.25, zoomEndEpochs=10):
     nepochs = len(losses[0])
     epochs = range(nepochs)
     plotEpochs0 = slice(int(cutStartPct * nepochs), nepochs)
-    plotEpochs1 = slice(int(nepochs - zoomEndEpochs - 1), nepochs)
+    plotEpochs1 = slice(int(nepochs - zoomEndEpochs), nepochs)
 
     fig, ax = plt.subplots(2, nlosses + 1, figsize=(18, 8))
     for il in range(nlosses):
@@ -36,13 +36,13 @@ def plot_losses(losses, labels=["Train"], cutStartPct=0.25, zoomEndEpochs=10):
 
     return
 
-def plot_scatter(model, device, x, y, weights=None, scales=None, text = "Predictions vs DNS",
+def plot_scatter(model, device, u, Ri, y, weights=None, scales=None, text = "Predictions vs DNS",
                 y_text = [r"$\tau_{11}$", r"$\tau_{12}$", r"$\tau_{13}$",
                           r"$\tau_{22}$", r"$\tau_{23}$", r"$\tau_{33}$"], 
                  return_predictions = False):
     
     model.eval()
-    yp = model(torch.from_numpy(x).float().to(device)).cpu().detach().numpy().squeeze()
+    yp = model(from_numpy(u).float().to(device), from_numpy(Ri).float().to(device)).cpu().detach().numpy().squeeze()
     
     noutvars = yp.shape[1] 
     assert len(y_text) == noutvars
