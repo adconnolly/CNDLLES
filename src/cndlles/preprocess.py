@@ -1,7 +1,7 @@
 import xarray as xr
 import numpy as np
 
-def preprocess(files, filemaskpercents, fileUgs, fileRes, size=3, irun='', reshape=True, dataAug = False):
+def preprocess(files, filemaskpercents, fileUgs, fileRes, size=3, irun='', reshape=True, dataAug = False, maskdict = None):
     # Any of the below could be changed to inputs of the function
     path="/glade/u/home/adac/work/DNStoLES/coarseData/"
     Ri_char = 5 # Characteristic Richardson number for scaling
@@ -70,16 +70,24 @@ def preprocess(files, filemaskpercents, fileUgs, fileRes, size=3, irun='', resha
         ny=outputFields.shape[2]
         nz=outputFields.shape[3]
         nt=outputFields.shape[4]
-        mask = np.random.rand(nx,ny,nz,nt) < filemaskpercents[ifile]
-        mask[:,:,0,:] = False # Can't use bottom layer but useful for mask size
-        mask[:,:,-1,:] = False # Can't use top " "
+        if maskdict==None:
+            mask = np.random.rand(nx,ny,nz,nt) < filemaskpercents[ifile]
+            mask[:,:,0,:] = False # Can't use bottom layer but useful for mask size
+            mask[:,:,-1,:] = False # Can't use top " "
+        else:
+            mask = maskdict["mask_"+file+'_'+str(irun)]
         maskDict["mask_"+file+'_'+str(irun)]=mask
-    
+        
         if dataAug:
-            krots = np.random.randint(0, 4, size = (nx,ny,nz,nt))
+            try:
+                krots = maskdict["krots_"+file+'_'+str(irun)]
+                print('Using loaded krots')
+            except:                
+                krots = np.random.randint(0, 4, size = (nx,ny,nz,nt))
         else:
             krots = np.zeros( (nx,ny,nz,nt), dtype = int)
-
+        maskDict["krots_"+file+'_'+str(irun)]=krots
+        
         u3d, Ri, y = normalize_and_rotate(inputFields, outputFields, mask, hvelScale, vvelScale, 
                                           thhScale, th3Scale, t33Scale, width, krots)
 
@@ -95,11 +103,12 @@ def preprocess(files, filemaskpercents, fileUgs, fileRes, size=3, irun='', resha
     print("input shape was " + str(u3d.shape)+ " + " +str(Ri.shape))
     if reshape:
         size=int(2*size+1)
-        u=my_reshape(u3d,size=size)                    
+        u=my_reshape(u3d,size=size)    
+        print("input shape to do 3rd dimension as channel in R2Conv is "+str(u.shape) + " + " +str(Ri.shape))
     else:
         u=u3d
-    print("input shape to do 3rd dimension as channel in R2Conv is "+str(u.shape) + " + " +str(Ri.shape))
-
+        print("input shape is "+str(u.shape) + " + " +str(Ri.shape))
+    
     return u, Ri, y, maskDict
 
 def normalize_and_rotate(inputFields, outputFields, mask, hvelScale, vvelScale, thhScale, th3Scale, t33Scale, width, krots):
@@ -137,7 +146,7 @@ def normalize_and_rotate(inputFields, outputFields, mask, hvelScale, vvelScale, 
 
                         krot=krots[i-size,j-size,k,it]
                         if krot != 0: # rotate_sample works for krot = 0, but no need
-                            rotate_sample(u3d[s], y[s], krot)
+                            u3d[s], y[s] = rotate_sample(u3d[s], y[s], krot)
                         
                         s += 1
 
